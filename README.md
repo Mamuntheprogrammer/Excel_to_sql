@@ -45,13 +45,13 @@
 <br />
 <div align="center">
   <a href="https://github.com/othneildrew/Best-README-Template">
-    <img src="images/gdrive.png" alt="Logo" >
+    <img src="images/xl2sql.png" alt="Logo" >
   </a>
 
-  <h3 align="center"># Google GDriveLinker</h3>
+  <h3 align="center"># Excel2SQL</h3>
 
   <p align="center">
-    An awesome GUI tool to generate direct download link for your google drive !
+    An awesome GUI tool to Query in your excel !
     <br />
     <!-- <a href=""><strong>Explore the docs »</strong></a> -->
     <a href="https://github.com/Mamuntheprogrammer/GDriveLinker">View Demo</a>
@@ -80,11 +80,11 @@
 ## About The Project
 
 <p align="center">
-  <img src="https://github.com/Mamuntheprogrammer/GDriveLinker/blob/master/images/gdrivelinker.png?raw=true" alt="Pygems Office Utility"/>
+  <img src="https://github.com/Mamuntheprogrammer/Excel_to_sql/blob/main/images/xl2sql2.png?raw=true" alt="Pygems Office Utility"/>
 </p>
 
 
-This Gui generate direct download link from google drive sharable file link
+This Gui enable an excel file to execute your sql query.
 
 
 
@@ -96,11 +96,12 @@ This Gui generate direct download link from google drive sharable file link
 
 
 * [Python](https://www.python.org/downloads/)
-* [Webbrowser](https://pypi.org/project/pycopy-webbrowser/)
-* [google-api-python-client](https://pypi.org/project/google-api-python-client/)
-* [google-auth-oauthlib](https://pypi.org/project/google-auth-oauthlib/)
+* [pysqlite3](https://pypi.org/project/pysqlite3/)
+* [SQLAlchemy](https://pypi.org/project/SQLAlchemy/)
+* [openpyxl](https://pypi.org/project/openpyxl/)
 * [pyperclip](https://pypi.org/project/pyperclip/)
-* [Cx-Freeze](https://pypi.org/project/cx-Freeze/)
+* [pandastable](https://pypi.org/project/pandastable/)
+* [traceback2](https://pypi.org/project/traceback2/)
 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
