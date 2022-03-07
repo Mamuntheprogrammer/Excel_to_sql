@@ -1,18 +1,18 @@
 
 <div  align="center" >
-  <a href="https://github.com/Mamuntheprogrammer/GDriveLinker/graphs/contributors">
+  <a href="https://github.com/Mamuntheprogrammer/Excel_to_sql/graphs/contributors">
     <img src="images/contributors.png" alt="contributors"  >
   </a>
-  <a href="https://github.com/Mamuntheprogrammer/GDriveLinker/network/members">
+  <a href="https://github.com/Mamuntheprogrammer/Excel_to_sql/network/members">
     <img src="images/forks.png" alt="forks"  >
   </a>
-  <a href="https://github.com/Mamuntheprogrammer/GDriveLinker/stargazers">
+  <a href="https://github.com/Mamuntheprogrammer/Excel_to_sql/stargazers">
     <img src="images/stars.png" alt="Logo"  >
   </a>
-  <a href="https://github.com/Mamuntheprogrammer/GDriveLinker/issues">
+  <a href="https://github.com/Mamuntheprogrammer/Excel_to_sql/issues">
     <img src="images/issues.png" alt="Logo"   >
   </a>
-  <a href="https://github.com/Mamuntheprogrammer/GDriveLinker/blob/main/LICENSE">
+  <a href="https://github.com/Mamuntheprogrammer/Excel_to_sql/blob/main/LICENSE">
     <img src="images/license.png" alt="license"   >
   </a>
   <a href="https://www.linkedin.com/in/mamuntheprogrammer/">
@@ -54,11 +54,11 @@
     An awesome GUI tool to Query in your excel !
     <br />
     <!-- <a href=""><strong>Explore the docs »</strong></a> -->
-    <a href="https://github.com/Mamuntheprogrammer/GDriveLinker">View Demo</a>
+    <a href="https://github.com/Mamuntheprogrammer/Excel_to_sql">View Demo</a>
     ·
-    <a href="https://github.com/Mamuntheprogrammer/GDriveLinker/issues">Report Bug</a>
+    <a href="https://github.com/Mamuntheprogrammer/Excel_to_sql/issues">Report Bug</a>
     ·
-    <a href="https://github.com/Mamuntheprogrammer/GDriveLinker/issues">Request Feature</a>
+    <a href="https://github.com/Mamuntheprogrammer/Excel_to_sql/issues">Request Feature</a>
   </p>
 </div>
 
@@ -121,7 +121,7 @@ This Gui enable an excel file to execute your sql query.
     <img src="images/linkedin.png" alt="Logo"  >
   </a>
 
-Project Link: [https://github.com/Mamuntheprogrammer/GDriveLinker](https://github.com/Mamuntheprogrammer/Excel_to_sql)
+Project Link: [https://github.com/Mamuntheprogrammer/Excel_to_sql](https://github.com/Mamuntheprogrammer/Excel_to_sql)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
