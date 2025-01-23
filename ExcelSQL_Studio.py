@@ -4,8 +4,10 @@ import pandas as pd
 from pandastable import Table
 from sqlalchemy import create_engine
 
+from tkinterdnd2 import TkinterDnD, DND_FILES
+
 # Create the main window
-root = tk.Tk()
+root = TkinterDnD.Tk()
 root.title("ExcelSQL Studio")
 wi_gui=900
 hi_gui=670
@@ -67,29 +69,44 @@ def upload_file(event=None):
         filetypes=[("Excel Files", "*.xls *.xlsx"), ("All Files", "*.*")]
     )
     if file_path:
-        footer_file_upload.config(text=f"File: {file_path}")
-        try:
-            # Reset the engine
-            engine = create_engine("sqlite://", echo=False)
+        handle_file_selection(file_path)
 
-            # Load Excel file and sheets
-            excel_file = pd.ExcelFile(file_path)
-            sheet_names = excel_file.sheet_names
-            populate_sheet_list(sheet_names)
+# Callback for drag-and-drop
+def drop_file(event):
+    global excel_file, sheet_names
+    file_path = event.data.strip('{').strip('}')  # Extract file path from event
+    if file_path.endswith((".xls", ".xlsx")):  # Ensure it's an Excel file
+        handle_file_selection(file_path)
+    else:
+        footer_file_upload.config(text="Error: Please upload a valid Excel file.")
 
-            # Load sheets into SQLite engine
-            for sheet in sheet_names:
-                sanitized_name = sheet.replace(" ", "_")
-                df = excel_file.parse(sheet)
-                df.to_sql(sanitized_name, engine, if_exists="replace", index=False)
-            messagebox.showinfo("Success", "Sheets loaded into the database as tables.")
-            select_sheet(sheet_names[0])  # Select the first sheet by default
-        except Exception as e:
-            footer_file_upload.config(text=f"Error: {str(e)}")
+# Common handler for file selection
+def handle_file_selection(file_path):
+    global excel_file, sheet_names, engine
+    footer_file_upload.config(text=f"File: {file_path}")
+    try:
+        # Reset the engine
+        engine = create_engine("sqlite://", echo=False)
+
+        # Load Excel file and sheet names
+        excel_file = pd.ExcelFile(file_path)
+        sheet_names = excel_file.sheet_names
+        populate_sheet_list(sheet_names)
+
+        # Load sheets into SQLite engine
+        for sheet in sheet_names:
+            sanitized_name = sheet.replace(" ", "_")
+            df = excel_file.parse(sheet)
+            df.to_sql(sanitized_name, engine, if_exists="replace", index=False)
+        
+        messagebox.showinfo("Success", "Sheets loaded into the database as tables.")
+        select_sheet(sheet_names[0])  # Automatically select the first sheet
+    except Exception as e:
+        footer_file_upload.config(text=f"Error: {str(e)}")
 
 # Populate the sheet names in the listbox
 def populate_sheet_list(sheets):
-    sheet_listbox.delete(0, tk.END)
+    sheet_listbox.delete(0, tk.END)  # Clear existing entries
     for sheet in sheets:
         sheet_listbox.insert(tk.END, sheet)
 
@@ -103,10 +120,6 @@ def select_sheet(sheet_name):
         footer_sheet_names.config(
             text=f"{sheet_name}: {total_rows} X {total_columns}"
         )
-
-        # footer_sheet_names.config(
-        #     text=f"Sheet: {sheet_name}, Columns: {total_columns}, Rows: {total_rows}"
-        # )
     except Exception as e:
         footer_sheet_names.config(text=f"Error: {str(e)}")
 
@@ -127,6 +140,7 @@ def execute_query():
         messagebox.showinfo("Success", "Query executed successfully.")
     except Exception as e:
         messagebox.showerror("Error", str(e))
+
 
 
 
@@ -175,10 +189,12 @@ drag_label = tk.Label(
     file_upload_content,
     text="Drag and drop an Excel file here\nor click below to upload",
     bg="white",
-    font=("Arial", 10),
+    font=("Arial", 14,"bold"),
     pady=20,
 )
 drag_label.pack(fill=tk.BOTH, expand=True)
+drag_label.drop_target_register(DND_FILES)
+drag_label.dnd_bind("<<Drop>>", drop_file)
 
 upload_button = tk.Button(
     file_upload_content,
@@ -200,7 +216,9 @@ left_pane.add(sheet_names_frame, weight=1)
 scrollbar = tk.Scrollbar(sheet_names_content)
 scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-sheet_listbox = tk.Listbox(sheet_names_content, yscrollcommand=scrollbar.set)
+font_style = ("Arial", 12)
+
+sheet_listbox = tk.Listbox(sheet_names_content, yscrollcommand=scrollbar.set, font=font_style)
 sheet_listbox.pack(fill=tk.BOTH, expand=True)
 
 scrollbar.config(command=sheet_listbox.yview)
