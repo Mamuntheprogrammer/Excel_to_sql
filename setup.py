@@ -35,9 +35,9 @@ shortcut_table = [
         "TARGETDIR",  # Component_
         "[TARGETDIR]ExcelSQL_Studio.exe",  # Target
         None,  # Arguments
-        "Launch ExcelSQL Studio",  # Description
+        None,  # Description
         None,  # Hotkey
-        "logo.ico",  # Icon
+        None,  # Icon
         None,  # IconIndex
         None,  # ShowCmd
         "TARGETDIR",  # WkDir
@@ -49,9 +49,7 @@ shortcut_table = [
 # MSI Options
 msi_data = {"Shortcut": shortcut_table}
 bdist_msi_options = {
-    "data": msi_data,
-    "add_to_path": False,
-}
+    "data": msi_data}
 
 # Build Options
 options = {
