@@ -112,6 +112,31 @@ def drop_file(event):
     else:
         footer_file_upload.config(text="Error: Please upload a valid Excel file.")
 
+# # Common handler for file selection
+# def handle_file_selection(file_path):
+#     global excel_file, sheet_names, engine
+#     footer_file_upload.config(text=f"File: {file_path}")
+#     try:
+#         # Reset the engine
+#         engine = create_engine("sqlite://", echo=False)
+
+#         # Load Excel file and sheet names
+#         excel_file = pd.ExcelFile(file_path)
+#         sheet_names = excel_file.sheet_names
+#         populate_sheet_list(sheet_names)
+
+#         # Load sheets into SQLite engine
+#         for sheet in sheet_names:
+#             sanitized_name = sheet.replace(" ", "_")
+#             df = excel_file.parse(sheet)
+#             df.to_sql(sanitized_name, engine, if_exists="replace", index=False)
+        
+#         messagebox.showinfo("Success", "Sheets loaded into the database as tables.")
+#         select_sheet(sheet_names[0])  # Automatically select the first sheet
+#     except Exception as e:
+#         footer_file_upload.config(text=f"Error: {str(e)}")
+
+
 # Common handler for file selection
 def handle_file_selection(file_path):
     global excel_file, sheet_names, engine
@@ -129,12 +154,17 @@ def handle_file_selection(file_path):
         for sheet in sheet_names:
             sanitized_name = sheet.replace(" ", "_")
             df = excel_file.parse(sheet)
+
+            # Sanitize column headers
+            df.columns = [col.replace(" ", "_") for col in df.columns]
+
             df.to_sql(sanitized_name, engine, if_exists="replace", index=False)
         
         messagebox.showinfo("Success", "Sheets loaded into the database as tables.")
         select_sheet(sheet_names[0])  # Automatically select the first sheet
     except Exception as e:
         footer_file_upload.config(text=f"Error: {str(e)}")
+
 
 # Populate the sheet names in the listbox
 def populate_sheet_list(sheets):
@@ -282,7 +312,7 @@ def on_focus_out(event):
         query_textbox.config(fg="gray")
 
 
-placeholder_text = "Click here to enter your query...  \nNote: If a sheet name contains spaces, replace them with underscores ('_') when writing your query."
+placeholder_text = "Click here to enter your query...  \nNote: If a sheet name or column name contains spaces, replace them with underscores ('_') in query."
 query_textbox = tk.Text(query_content, height=5, font=("Arial", 11), fg="gray")
 query_textbox.insert("1.0", placeholder_text)
 query_textbox.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
