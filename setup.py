@@ -68,6 +68,7 @@ options = {
             "sqlalchemy",
             "tkinterdnd2",
             "base64",
+            "webbrowser",
         ],
     },
 }

@@ -8,6 +8,10 @@ from tkinterdnd2 import TkinterDnD, DND_FILES
 import base64
 
 
+# Import necessary libraries
+import webbrowser
+
+
 # if not sys.warnoptions:
 #     import warnings
 #     warnings.simplefilter("ignore")
@@ -15,6 +19,16 @@ import base64
 # Create the main window
 root = TkinterDnD.Tk()
 root.title("ExcelSQL Studio")
+
+
+
+
+
+# Create the Menu Bar
+menu_bar = tk.Menu(root)
+
+
+
 
 
 # Base64 encoded icon data (replace with actual base64 string)
@@ -242,11 +256,6 @@ sheet_listbox.pack(fill=tk.BOTH, expand=True)
 scrollbar.config(command=sheet_listbox.yview)
 sheet_listbox.bind("<<ListboxSelect>>", on_sheet_select)
 
-# # Summary Section
-# summary_frame, summary_content, footer_summary = create_section(
-#     left_pane, header_text="Summary", footer_text="Sheet info will appear here", bg_color="white"
-# )
-# left_pane.add(summary_frame, weight=1)
 
 # Right Pane (Query and Result Sections)
 right_pane = ttk.PanedWindow(main_paned, orient=tk.VERTICAL)
@@ -366,6 +375,93 @@ export_txt_button = tk.Button(
 export_txt_button.pack(side=tk.RIGHT, padx=5)
 
 
+# File Menu
+file_menu = tk.Menu(menu_bar, tearoff=0)
+file_menu.add_command(label="Open File", command=upload_file)  # Replace `open_file` with your actual open file function
+file_menu.add_command(label="Exit", command=root.quit)
+menu_bar.add_cascade(label="File", menu=file_menu)
+
+# Contact Menu
+def open_url(url):
+    webbrowser.open_new(url)
+
+contact_menu = tk.Menu(menu_bar, tearoff=0)
+contact_menu.add_command(label="FaceBook", command=lambda: open_url("https://www.facebook.com/pygemsbd"))
+contact_menu.add_command(label="LinkedIn", command=lambda: open_url("https://www.linkedin.com/in/mamuntheprogrammer/"))
+contact_menu.add_command(label="YouTube", command=lambda: open_url("https://www.youtube.com/@pygemsbd"))
+menu_bar.add_cascade(label="Contact", menu=contact_menu)
+
+# Shortcut Menu
+def show_shortcuts():
+    shortcuts = """Shortcuts:
+    Ctrl + O = Open File
+    Ctrl + E = Exit
+    Ctrl + R = Run Query
+    Ctrl + + = Increase Query Entry Text Font Size
+    Ctrl + X + E = Export Excel
+    Ctrl + X + T = Export Txt
+    Ctrl + X + C = Export CSV
+    """
+    messagebox.showinfo("Shortcuts", shortcuts)
+
+shortcut_menu = tk.Menu(menu_bar, tearoff=0)
+shortcut_menu.add_command(label="Show Shortcuts", command=show_shortcuts)
+menu_bar.add_cascade(label="Shortcut", menu=shortcut_menu)
+
+def show_about():
+    about_text = """About ExcelSQL Studio:
+
+Developer Name: Md. Abdullah Al Mamun
+Company Name: PyGemsBD
+
+ExcelSQL Studio is a simple yet powerful tool designed to streamline data analysis and database interactions. 
+With features like SQL query execution, multi-format export options, and intuitive navigation, it empowers 
+users to manage their data effortlessly.
+
+Thank you for using ExcelSQL Studio!
+"""
+    messagebox.showinfo("About ExcelSQL Studio", about_text)
+
+
+# Define shortcut functions
+def increase_font_size(event=None):
+    # Get the current font settings of the query_textbox
+    current_font = query_textbox.cget("font")
+    font_name, font_size = current_font.split()[0], int(current_font.split()[1])
+    
+    # Increase the font size by 1, with a maximum size of 15
+    new_font_size = min(font_size + 1, 15)
+    query_textbox.config(font=(font_name, new_font_size))
+
+def decrease_font_size(event=None):
+    # Get the current font settings of the query_textbox
+    current_font = query_textbox.cget("font")
+    font_name, font_size = current_font.split()[0], int(current_font.split()[1])
+    
+    # Decrease the font size by 1, with a minimum size of 10
+    new_font_size = max(font_size - 1, 10)
+    query_textbox.config(font=(font_name, new_font_size))
+
+
+
+
+
+# Bind shortcuts to the root window
+root.bind("<Control-r>", lambda event: execute_query())  # Replace `run_query` with your function
+root.bind("<Control-plus>", increase_font_size)  # Increase font size
+root.bind("<Control-minus>", decrease_font_size)  # Decrease font size
+root.bind("<Control-x><Control-e>", lambda event: export_result("xlsx"))
+root.bind("<Control-x><Control-t>", lambda event: export_result("csv"))
+root.bind("<Control-x><Control-c>", lambda event: export_result("txt"))
+
+
+
+about_menu = tk.Menu(menu_bar, tearoff=0)
+about_menu.add_command(label="About Application", command=show_about)
+menu_bar.add_cascade(label="About", menu=about_menu)
+
+# Add the menu bar to the main window
+root.config(menu=menu_bar)
 
 
 
