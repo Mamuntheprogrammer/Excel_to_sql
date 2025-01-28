@@ -1,6 +1,8 @@
 import sys
 from cx_Freeze import setup, Executable
 import os
+from pywin32 import msilib
+
 
 # Set up paths for TCL and TK libraries
 PYTHON_INSTALL_DIR = os.path.dirname(os.path.dirname(os.__file__))

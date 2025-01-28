@@ -3,11 +3,15 @@ from tkinter import ttk, filedialog, messagebox, PhotoImage
 import pandas as pd
 from pandastable import Table
 from sqlalchemy import create_engine
+
 from tkinterdnd2 import TkinterDnD, DND_FILES
 import base64,os
-import queue
+
+import threading,time
+
+# Import necessary libraries
 import webbrowser
-from PIL import Image, ImageTk
+
 
 task_running = False
 task_should_terminate = False  # Global flag to track task termination
@@ -18,8 +22,14 @@ root = TkinterDnD.Tk()
 root.title("ExcelSQL Studio")
 
 
+
+
+
 # Create the Menu Bar
 menu_bar = tk.Menu(root)
+
+
+
 
 # Base64 encoded icon data (replace with actual base64 string)
 icon_data = """
@@ -42,6 +52,9 @@ x=(wi_scr/2)-(wi_gui/2)
 y=(hi_scr/2)-(hi_gui/2)
 
 root.geometry('%dx%d+%d+%d'%(wi_gui,hi_gui,x,y))
+
+
+
 
 
 # Function to create a section with a header, footer, and content
@@ -79,6 +92,15 @@ def create_section(parent, header_text, footer_text, bg_color):
 
     return section_frame, content_frame, footer
 
+import queue
+
+# import queue
+# import pandas as pd
+# import tkinter as tk
+# from tkinter import filedialog, messagebox, ttk
+# import threading
+# from sqlalchemy import create_engine
+# import os
 
 # Global variables
 excel_file = None
@@ -111,6 +133,10 @@ def clear_previous_data():
     # Clear result table
     for widget in result_canvas.winfo_children():
         widget.destroy()
+
+
+
+
 
 
 def handle_file_selection(file_path):
@@ -155,6 +181,9 @@ def handle_file_selection(file_path):
 
 
 
+
+
+
 # Function to populate the sheet names in the listbox
 def populate_sheet_list(sheets):
     sheet_listbox.delete(0, tk.END)  # Clear existing entries
@@ -190,6 +219,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 engine_queue = queue.Queue()
 
 
+
 def get_engine():
     global engine
     if engine is None:
@@ -198,54 +228,82 @@ def get_engine():
     return engine
 
 
-def execute_query():
-    global query_result
-    query = query_textbox.get("1.0", tk.END).strip()
-    
-    if not query:
-        messagebox.showerror("Error", "Query cannot be empty.")
-        return
-    
+def execute_query(query):
+    """
+    Executes the provided SQL query on the connected database and returns the result.
+    Uses the progress popup to show task progress.
+    """
+    global task_running
+
+    # Show progress popup
+    progress_popup = show_progress_popup("Executing Query")
+    task_running = True
+
     try:
-        # Retrieve the engine using get_engine() (ensure engine is properly set)
-        engine_instance = get_engine()  
-        
-        if engine_instance is None:
-            messagebox.showerror("Error", "Engine not available.")
-            return
-        
-        query_result = pd.read_sql_query(query, engine_instance)
-        update_result_table(query_result)
-        
-        total_rows, total_columns = query_result.shape
-        footer_result.config(
-            text=f"Columns: {total_columns}, Rows: {total_rows}"
-        )
-        messagebox.showinfo("Success", "Query executed successfully.")
-    
+        # Connect to the database
+        engine = create_engine("sqlite:///example.db")  # Replace with your database connection
+        with engine.connect() as connection:
+            # Execute the query
+            result = connection.execute(query)
+
+            # Fetch all rows (if SELECT query)
+            if query.strip().lower().startswith("select"):
+                data = result.fetchall()
+                task_running = False
+                progress_popup.destroy()  # Close popup after task completion
+                return data
+            else:
+                # For other queries (INSERT/UPDATE/DELETE)
+                connection.commit()
+                task_running = False
+                progress_popup.destroy()  # Close popup after task completion
+                messagebox.showinfo("Success", "Query executed successfully!")
+
     except Exception as e:
-        messagebox.showerror("Error", str(e))
+        task_running = False
+        progress_popup.destroy()  # Close popup in case of an error
+        messagebox.showerror("Error", f"An error occurred: {e}")
+
+    finally:
+        task_running = False
 
 
 
-# Export result
-def export_result(file_type):
-    if query_result is None or query_result.empty:
-        messagebox.showerror("Error", "No result to export.")
-        return
-    file_path = filedialog.asksaveasfilename(defaultextension=f".{file_type}", filetypes=[(file_type.upper(), f"*.{file_type}")])
-    if not file_path:
-        return
+def export_result(data, file_path):
+    """
+    Exports the provided data to a specified file path.
+    Uses the progress popup to show task progress.
+    """
+    global task_running
+
+    # Show progress popup
+    progress_popup = show_progress_popup("Exporting Data")
+    task_running = True
+
     try:
-        if file_type == "xlsx":
-            query_result.to_excel(file_path, index=False)
-        elif file_type == "csv":
-            query_result.to_csv(file_path, index=False)
-        elif file_type == "txt":
-            query_result.to_csv(file_path, index=False, sep='\t')
-        messagebox.showinfo("Success", f"Result exported to {file_path}")
+        # Convert the data to a DataFrame
+        df = pd.DataFrame(data)
+
+        # Export to the file path
+        if file_path.endswith(".csv"):
+            df.to_csv(file_path, index=False)
+        elif file_path.endswith(".xlsx"):
+            df.to_excel(file_path, index=False)
+        else:
+            raise ValueError("Unsupported file format. Use .csv or .xlsx.")
+
+        task_running = False
+        progress_popup.destroy()  # Close popup after task completion
+        messagebox.showinfo("Success", f"Data exported successfully to {file_path}")
+
     except Exception as e:
-        messagebox.showerror("Error", str(e))
+        task_running = False
+        progress_popup.destroy()  # Close popup in case of an error
+        messagebox.showerror("Error", f"An error occurred: {e}")
+
+    finally:
+        task_running = False
+
 
 # Callback for file upload
 def upload_file(event=None):
@@ -260,55 +318,66 @@ def upload_file(event=None):
     if file_path:
         # Clear previous data and show progress popup
         clear_previous_data()
-        show_progress_popup(handle_file_selection, file_path, message="File is Loading, Please Wait")
+        show_progress_popup(
+            task_name="Uploading File",
+            task_function=handle_file_selection,
+            task_args=(file_path,),
+            message="File is Loading, Please Wait",
+        )
     else:
         footer_file_upload.config(text="Error: Please upload a valid Excel or CSV file.")
+
         
 
-def show_progress_popup(task, *args, message="Processing, please wait..."):
-    global task_running, task_should_terminate
-    if task_running:
-        if messagebox.askyesno("Task in Progress", "A task is already running. Do you want to terminate it?"):
-            task_running = False
-            task_should_terminate = True  # Mark task for termination
-        else:
-            return
-
-    task_running = True
-    task_should_terminate = False  # Reset termination flag
-
-    # Create the popup window
+def show_progress_popup(task_name):
+    """
+    Displays a popup to show progress while a task is being executed.
+    A timer is included to show the elapsed time.
+    """
+    # Create a new popup window
     popup = tk.Toplevel(root)
-    popup.title("Processing")
-    popup.geometry("400x100")
+    popup.title("Progress")
+    popup.geometry("300x150")
     popup.resizable(False, False)
-    popup.transient(root)
-    popup.grab_set()  # Make it modal
 
-    # Center the popup
-    root.update_idletasks()
-    root_width = root.winfo_width()
-    root_height = root.winfo_height()
-    root_x = root.winfo_x()
-    root_y = root.winfo_y()
-    popup_width = 400
-    popup_height = 100
-    x = root_x + (root_width - popup_width) // 2
-    y = root_y + (root_height - popup_height) // 2
-    popup.geometry(f"{popup_width}x{popup_height}+{x}+{y}")
+    # Display the task name
+    task_label = tk.Label(popup, text=f"Task: {task_name}", font=("Arial", 12))
+    task_label.pack(pady=10)
 
-    # Add a label and progress bar
-    label = ttk.Label(popup, text=message)
-    label.pack(pady=10)
+    # Add a progress label
+    progress_label = tk.Label(popup, text="Processing...", font=("Arial", 10))
+    progress_label.pack(pady=5)
 
-    progress = ttk.Progressbar(popup, mode="indeterminate")
-    progress.pack(pady=10, fill=tk.X, padx=10)
-    progress.start()
+    # Display the timer
+    timer_label = tk.Label(popup, text="Time Elapsed: 0 seconds", font=("Arial", 10))
+    timer_label.pack(pady=5)
 
-    # Start the task by calling after() method
-    root.after(100, run_task, popup, task, *args)
+    # Add a close button (disabled during the task)
+    close_button = tk.Button(
+        popup, text="Close", state=tk.DISABLED, command=popup.destroy
+    )
+    close_button.pack(pady=10)
 
+    # Track elapsed time
+    start_time = time.time()
 
+    def update_timer():
+        # Calculate elapsed time
+        elapsed_time = int(time.time() - start_time)
+        timer_label.config(text=f"Time Elapsed: {elapsed_time} seconds")
+        if task_running:  # Continue updating the timer while the task is running
+            popup.after(1000, update_timer)
+        else:
+            # Enable the close button when the task finishes
+            progress_label.config(text="Task Completed!")
+            close_button.config(state=tk.NORMAL)
+
+    # Start the timer
+    update_timer()
+
+    # Make the popup modal (block other interactions)
+    popup.grab_set()
+    return popup
 
 
 
@@ -337,6 +406,8 @@ def complete_task(popup, message):
 
 
 
+
+
 # Drop file event handler
 def drop_file(event):
     global excel_file, sheet_names
@@ -344,12 +415,22 @@ def drop_file(event):
 
     # Check if the file type is supported
     if file_path.endswith((".xls", ".xlsx", ".csv")):
-        # Clear previous data and show progress popup
+        # Clear previous data
         clear_previous_data()
-        # Pass the function (not its result) to show_progress_popup
-        show_progress_popup(handle_file_selection, file_path, message="Loading file... \n GUI may appear Not Responding, Please wait...")
+        
+        # Show progress popup
+        popup = show_progress_popup("Uploading File")
+        try:
+            handle_file_selection(file_path)  # Call the function to handle file selection
+        except Exception as e:
+            footer_file_upload.config(text=f"Error: {e}")
+        finally:
+            task_running = False  # Ensure the progress popup closes
+            popup.destroy()
     else:
         footer_file_upload.config(text="Error: Please upload a valid Excel or CSV file.")
+
+
 
 
 
@@ -445,6 +526,8 @@ query_textbox.bind("<FocusOut>", on_focus_out)
 
 
 
+
+
 run_query_button = tk.Button(
     query_content,
     text="Run Query",
@@ -470,6 +553,8 @@ result_canvas.pack(fill=tk.BOTH, expand=False)
 
 
 
+
+
 # Update result table
 def update_result_table(data):
     # Clear previous content
@@ -487,6 +572,8 @@ def update_result_table(data):
 
     # Hide loader after the table is updated
     
+
+
 
 
 # Footer with Export Buttons (always visible)
@@ -593,6 +680,8 @@ def decrease_font_size(event=None):
 
 
 
+
+
 # Bind shortcuts to the root window
 root.bind("<Control-r>", lambda event: execute_query())  # Replace `run_query` with your function
 root.bind("<Control-plus>", increase_font_size)  # Increase font size
@@ -609,6 +698,9 @@ menu_bar.add_cascade(label="About", menu=about_menu)
 
 # Add the menu bar to the main window
 root.config(menu=menu_bar)
+
+
+
 
 
 
