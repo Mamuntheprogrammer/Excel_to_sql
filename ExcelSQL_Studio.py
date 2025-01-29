@@ -7,7 +7,7 @@ from tkinterdnd2 import TkinterDnD, DND_FILES
 import base64,os
 import queue
 import webbrowser
-from PIL import Image, ImageTk
+
 
 task_running = False
 task_should_terminate = False  # Global flag to track task termination
@@ -221,31 +221,61 @@ def execute_query():
         footer_result.config(
             text=f"Columns: {total_columns}, Rows: {total_rows}"
         )
-        messagebox.showinfo("Success", "Query executed successfully.")
+        # messagebox.showinfo("Success", "Query executed successfully.")
     
     except Exception as e:
         messagebox.showerror("Error", str(e))
 
 
+def execute_query2():
+    show_progress_popup(execute_query, message="Fetching, Please Wait")
 
-# Export result
+
+
+# Optimized Export Function
+import xlsxwriter  # Optimized Excel writing
+import gzip
+
 def export_result(file_type):
     if query_result is None or query_result.empty:
         messagebox.showerror("Error", "No result to export.")
         return
+
+    # Ask for the file path
     file_path = filedialog.asksaveasfilename(defaultextension=f".{file_type}", filetypes=[(file_type.upper(), f"*.{file_type}")])
     if not file_path:
         return
+
     try:
-        if file_type == "xlsx":
-            query_result.to_excel(file_path, index=False)
-        elif file_type == "csv":
-            query_result.to_csv(file_path, index=False)
+        # Optimized chunking for large DataFrames
+        chunksize = 100000  # Set your chunk size based on available memory
+
+        # **CSV Export** (with optional compression for large files)
+        if file_type == "csv":
+            # Writing CSV in chunks
+            with open(file_path, mode='w', newline='', encoding='utf-8') as file:
+                query_result.to_csv(file, index=False, chunksize=chunksize)
+
+        # **Excel Export** (using xlsxwriter for faster writing)
+        elif file_type == "xlsx":
+            with pd.ExcelWriter(file_path, engine="xlsxwriter") as writer:
+                # Efficient chunk writing for Excel
+                for start_row in range(0, len(query_result), chunksize):
+                    chunk = query_result.iloc[start_row:start_row + chunksize]
+                    chunk.to_excel(writer, index=False, header=start_row == 0, sheet_name="Sheet1", startrow=start_row)
+
+        # **TXT Export** (tab-separated)
         elif file_type == "txt":
-            query_result.to_csv(file_path, index=False, sep='\t')
+            with open(file_path, mode='w', encoding='utf-8') as file:
+                query_result.to_csv(file, index=False, sep='\t', chunksize=chunksize)
+
+        # Success message
         messagebox.showinfo("Success", f"Result exported to {file_path}")
+
     except Exception as e:
         messagebox.showerror("Error", str(e))
+
+
 
 # Callback for file upload
 def upload_file(event=None):
@@ -305,8 +335,12 @@ def show_progress_popup(task, *args, message="Processing, please wait..."):
     progress.pack(pady=10, fill=tk.X, padx=10)
     progress.start()
 
+    # Ensure args is optional
+    args = args if args else ()
+
     # Start the task by calling after() method
-    root.after(100, run_task, popup, task, *args)
+    root.after(100, lambda: run_task(popup, task, *args))
+
 
 
 
@@ -418,29 +452,83 @@ query_frame, query_content, footer_query = create_section(
 )
 right_pane.add(query_frame, weight=1)
 
-# query_textbox = tk.Text(query_content, height=5, font=("Arial", 11))
-# query_textbox.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
+import tkinter as tk
 
+# Placeholder text setup
+placeholder_text = "Click here to enter your query...\nFor Faster Load use CSV file with short File or sheet name\nNote: If a sheet name or column name contains spaces, replace them with underscores ('_') in query."
+
+# Function to handle focus in event (clear placeholder text)
 def on_focus_in(event):
     if query_textbox.get("1.0", "end-1c") == placeholder_text:
         query_textbox.delete("1.0", "end")
         query_textbox.config(fg="black")
 
+# Function to handle focus out event (restore placeholder text if text is empty)
 def on_focus_out(event):
     if query_textbox.get("1.0", "end-1c") == "":
         query_textbox.insert("1.0", placeholder_text)
         query_textbox.config(fg="gray")
 
+# SQLAlchemy keywords and functions for highlighting
+sqlalchemy_keywords = [
+    "select", "insert", "update", "delete", "from", "where", "and", "or", 
+    "like", "join", "inner", "left", "right", "outer", "limit", "group", "order", 
+    "asc", "desc", "func", "distinct", "having", "between", "in", "is", "null", 
+    "ilike", "exists", "not", "between", "on", "as", "alias", "case", "when", "then",
+    "else", "end", "all", "any", "some", "exists", "with", "having", "union", "intersect", 
+    "except", "using", "corresponding", "left outer", "right outer", "full outer"
+]
 
-placeholder_text = "Click here to enter your query...\n For Faster Load use CSV file with short File or sheet name  \nNote: If a sheet name or column name contains spaces, replace them with underscores ('_') in query."
+# SQLAlchemy functions typically used in queries (these are often accessed via the 'func' object)
+sqlalchemy_functions = [
+    "count(", "sum(", "avg(", "min(", "max(", "coalesce(", "concat(", "round(", "length(", "lower(",
+    "upper(", "now(", "current_date(", "current_time(", "date(", "date_trunc(", "extract(", "day(", 
+    "month(", "year(", "hour(", "minute(", "second(", "random(", "position(", "mod(", "concat_ws(",
+    "like(", "ilike(", "trim(", "replace(", "regexp_match(", "regexp_replace(", "cast(", "isnull(", 
+    "isnotnull(", "ifnull(", "date_part(", "jsonb_extract(", "json_extract(", "json_each(", "json_array_length(",
+    "json_populate_record(", "jsonb_array_elements_text(", "jsonb_set(", "jsonb_object_keys(", "current_user(",
+    "current_schema(", "current_catalog("
+]
+
+
+
+# Combining keywords and function names for highlighting
+sqlalchemy_keywords.extend(sqlalchemy_functions)
+
+
+# Function to highlight SQLAlchemy keywords in bold and color
+def highlight_keywords(event=None):
+    user_input = query_textbox.get("1.0", "end-1c")
+    
+    # Clear previous tags (if any)
+    query_textbox.tag_remove("keyword", "1.0", "end")
+
+    # Split the user input into words and check for SQLAlchemy keywords
+    words = user_input.split()
+    
+    for word in words:
+        if word.lower() in sqlalchemy_keywords:
+            start_idx = query_textbox.search(word, "1.0", tk.END)
+            if start_idx:
+                end_idx = f"{start_idx}+{len(word)}c"
+                query_textbox.tag_add("keyword", start_idx, end_idx)
+
+    # Configure the keyword tag to make the text bold and colored
+    query_textbox.tag_configure("keyword", foreground="green", font=("Arial", 12, "bold"))
+
+# Create the query textbox with placeholder
 query_textbox = tk.Text(query_content, height=5, font=("Arial", 11), fg="gray")
 query_textbox.insert("1.0", placeholder_text)
 query_textbox.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-# Bind events to handle focus in and out
+# Bind events for focus in and out
 query_textbox.bind("<FocusIn>", on_focus_in)
 query_textbox.bind("<FocusOut>", on_focus_out)
+
+# Key binding to trigger keyword highlighting on typing
+query_textbox.bind("<KeyRelease>", highlight_keywords)
+
 
 
 
@@ -448,7 +536,7 @@ query_textbox.bind("<FocusOut>", on_focus_out)
 run_query_button = tk.Button(
     query_content,
     text="Run Query",
-    command=execute_query,
+    command=execute_query2,
     font=("Arial", 10, "bold"),
     bg="green",
     fg="white",
@@ -496,7 +584,7 @@ export_button_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
 export_excel_button = tk.Button(
     export_button_frame,
     text="Export to Excel",
-    command=lambda: export_result("xlsx"),
+    command=lambda: show_progress_popup(export_result,"xlsx", message="Exporting, Please Wait..."),
     bg="green",
     fg="white",
     font=("Arial", 10)
@@ -506,7 +594,7 @@ export_excel_button.pack(side=tk.RIGHT, padx=5)
 export_csv_button = tk.Button(
     export_button_frame,
     text="Export to CSV",
-    command=lambda: export_result("csv"),
+    command=lambda: show_progress_popup(export_result,"csv", message="Exporting, Please Wait..."),
     bg="green",
     fg="white",
     font=("Arial", 10)
@@ -516,7 +604,7 @@ export_csv_button.pack(side=tk.RIGHT, padx=5)
 export_txt_button = tk.Button(
     export_button_frame,
     text="Export to TXT",
-    command=lambda: export_result("txt"),
+    command=lambda: show_progress_popup(export_result,"txt", message="Exporting, Please Wait..."),
     bg="green",
     fg="white",
     font=("Arial", 10)
@@ -542,7 +630,9 @@ menu_bar.add_cascade(label="Contact", menu=contact_menu)
 
 # Shortcut Menu
 def show_shortcuts():
-    shortcuts = """Shortcuts:
+    shortcuts = """
+    *Tips : Use CSV For Fast Import & Export \n
+    Shortcuts:
     Ctrl + O = Open File
     Ctrl + E = Exit
     Ctrl + R = Run Query
@@ -594,7 +684,7 @@ def decrease_font_size(event=None):
 
 
 # Bind shortcuts to the root window
-root.bind("<Control-r>", lambda event: execute_query())  # Replace `run_query` with your function
+root.bind("<Control-r>", lambda event: show_progress_popup(execute_query, message="Fetching, Please Wait"))  # Replace `run_query` with your function
 root.bind("<Control-plus>", increase_font_size)  # Increase font size
 root.bind("<Control-minus>", decrease_font_size)  # Decrease font size
 root.bind("<Control-x><Control-e>", lambda event: export_result("xlsx"))

@@ -1,7 +1,7 @@
 import sys
 from cx_Freeze import setup, Executable
 import os
-from pywin32 import msilib
+import msilib
 
 
 # Set up paths for TCL and TK libraries
@@ -71,6 +71,8 @@ options = {
             "tkinterdnd2",
             "base64",
             "webbrowser",
+            "queue",
+            "xlsxwriter",
         ],
     },
 }
