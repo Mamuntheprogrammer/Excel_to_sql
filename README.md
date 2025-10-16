@@ -80,7 +80,15 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
+
+
 <p align="center">
+  <h1> New Version </h1>
+  <img src="https://github.com/Mamuntheprogrammer/Excel_to_sql/blob/main/images/newversion.jpg?raw=true" alt="Pygems Office Utility"/>
+</p>
+
+<p align="center">
+  <h1> Old Version </h1>
   <img src="https://github.com/Mamuntheprogrammer/Excel_to_sql/blob/main/images/xl2sql2.png?raw=true" alt="Pygems Office Utility"/>
 </p>
 
