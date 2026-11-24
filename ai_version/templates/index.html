@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="app-token" content="{{ token }}">
+  <meta name="app-version" content="{{ version }}">
+  <title>ExcelSQL Studio</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f7cff'/%3E%3Cellipse cx='16' cy='10' rx='9' ry='4' fill='none' stroke='white' stroke-width='2'/%3E%3Cpath d='M7 10v12c0 2.2 4 4 9 4s9-1.8 9-4V10' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ version }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/workspace.css') }}?v={{ version }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/ui.css') }}?v={{ version }}">
+</head>
+<body>
+<svg class="svg-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="8" ry="3.2"/><path d="M4 5.5v6.5c0 1.8 3.6 3.2 8 3.2s8-1.4 8-3.2V5.5"/><path d="M4 12v6.5c0 1.8 3.6 3.2 8 3.2s8-1.4 8-3.2V12"/></symbol>
+  <symbol id="i-table" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 9h17M3.5 14h17M9 4v16"/></symbol>
+  <symbol id="i-view" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6"/></symbol>
+  <symbol id="i-column" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 4v16"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="8" r="4"/><path d="m11 11 8 8M15 15l2-2M18 18l2-2"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 7.5A2.5 2.5 0 0 1 6 5h4l2 2.5h6.5A2.5 2.5 0 0 1 21 10v8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3.5 18Z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3.5h7l5 5v12H6z"/><path d="M13 3.5v5h5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7.5 8.5 12 4l4.5 4.5"/><path d="M4 16v3a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 19v-3"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v12M7.5 11.5 12 16l4.5-4.5"/><path d="M4 16v3a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 19v-3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5"/><path d="M19.2 12A7.5 7.5 0 1 0 17 17.7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.7 9a2.4 2.4 0 1 1 3.6 2.1c-.9.5-1.3 1-1.3 2"/><path d="M12 17.2v.1"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.5 4v5h5"/><path d="M12 8v4.5l3 1.8"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5.5 6.5 6.5L9 18.5"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8 8"/><path d="M18 14v5a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19V7.5A1.5 1.5 0 0 1 5 6h5"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5v-3A2 2 0 0 0 13.5 3.5H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 6.5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5 21 20H3Z"/><path d="M12 9v5"/><path d="M12 17.2v.1"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.8v.1"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 6.5h16M9 6.5V4h6v2.5M6.5 6.5 7.5 20h9l1-13.5"/><path d="M10 10v6M14 10v6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="m8.5 7-5 5 5 5M15.5 7l5 5-5 5M13.5 4l-3 16"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3.5 5h17l-6.5 7.5V20l-4-2v-5.5Z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="m3.5 11 8.5-7 8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-5.5h5V20"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="18.5" cy="12" r="1"/></symbol>
+  <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M6.5 10.5 12 5l5.5 5.5"/></symbol>
+  <symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14M6.5 13.5 12 19l5.5-5.5"/></symbol>
+  <symbol id="i-spinner" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3.5 13.8 9l5.5 1.8-5.5 1.8L12 18l-1.8-5.4L4.7 10.8 10.2 9Z"/><path d="M19 17.5v4M17 19.5h4"/></symbol>
+</svg>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <button class="brand" id="brandHome" title="Home">
+      <span class="brand-mark">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <defs>
+            <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#6f9bff"/><stop offset="1" stop-color="#3556e8"/>
+            </linearGradient>
+          </defs>
+          <rect width="32" height="32" rx="9" fill="url(#brandGrad)"/>
+          <ellipse cx="16" cy="10.5" rx="8" ry="3.4" fill="none" stroke="#fff" stroke-width="1.9"/>
+          <path d="M8 10.5v10.2c0 1.9 3.6 3.4 8 3.4s8-1.5 8-3.4V10.5" fill="none" stroke="#fff" stroke-width="1.9"/>
+          <path d="M8 15.6c0 1.9 3.6 3.4 8 3.4s8-1.5 8-3.4" fill="none" stroke="#fff" stroke-width="1.9" opacity=".7"/>
+        </svg>
+      </span>
+      <span class="brand-text">ExcelSQL <em>Studio</em><span class="brand-badge">2.0</span></span>
+    </button>
+
+    <div class="topbar-connection" id="topbarConnection"></div>
+    <div class="topbar-spacer"></div>
+
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" id="btnOpenDb" title="Open a SQLite database (Ctrl+O)">
+        <svg class="icon"><use href="#i-folder"/></svg><span>Open database</span>
+      </button>
+      <button class="btn btn-primary" id="btnImport" title="Import Excel or CSV (Ctrl+I)">
+        <svg class="icon"><use href="#i-upload"/></svg><span>Import data</span>
+      </button>
+      <span class="topbar-divider"></span>
+      <button class="icon-btn" id="btnHistory" title="Query history">
+        <svg class="icon"><use href="#i-history"/></svg>
+      </button>
+      <button class="icon-btn" id="btnTheme" title="Toggle theme">
+        <svg class="icon theme-icon-dark"><use href="#i-moon"/></svg>
+        <svg class="icon theme-icon-light"><use href="#i-sun"/></svg>
+      </button>
+      <button class="icon-btn" id="btnHelp" title="Help & shortcuts">
+        <svg class="icon"><use href="#i-help"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="workbench">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span class="panel-eyebrow">Explorer</span>
+        <div class="sidebar-header-actions">
+          <button class="icon-btn sm" id="btnRefreshSchema" title="Refresh schema">
+            <svg class="icon"><use href="#i-refresh"/></svg>
+          </button>
+          <button class="icon-btn sm" id="btnOpenDbSide" title="Open database">
+            <svg class="icon"><use href="#i-plus"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="connectionCard"></div>
+      <div class="sidebar-search" id="schemaSearchWrap">
+        <svg class="icon"><use href="#i-search"/></svg>
+        <input id="schemaSearch" type="text" placeholder="Filter tables, views, columns" autocomplete="off" spellcheck="false">
+        <kbd class="search-clear" id="clearSchemaSearch" title="Clear filter" hidden>×</kbd>
+      </div>
+      <nav class="schema-tree" id="schemaTree" aria-label="Database objects"></nav>
+      <div class="sidebar-footer">
+        <span class="local-dot"></span>
+        <span>Local-first · token protected</span>
+        <span class="sqlite-version" id="sqliteVersion">SQLite</span>
+      </div>
+    </aside>
+
+    <div class="sidebar-resizer" id="sidebarResizer" title="Drag to resize"></div>
+
+    <main class="main-panel">
+      <div class="tabstrip">
+        <button class="icon-btn tab-explorer" id="btnToggleSidebar" title="Toggle explorer">
+          <svg class="icon"><use href="#i-database"/></svg>
+        </button>
+        <div class="tabstrip-scroll" id="tabList" role="tablist"></div>
+        <button class="icon-btn tab-new" id="btnNewQuery" title="New query tab (Ctrl+T)">
+          <svg class="icon"><use href="#i-plus"/></svg>
+        </button>
+        <button class="icon-btn tab-home" id="btnHomeTab" title="Welcome screen">
+          <svg class="icon"><use href="#i-home"/></svg>
+        </button>
+      </div>
+      <div class="tab-panels" id="tabPanels"></div>
+    </main>
+  </div>
+
+  <footer class="statusbar">
+    <div class="status-left">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusConnection">No database connected</span>
+      <span class="status-sep"></span>
+      <span id="statusMessage" class="status-message">Ready</span>
+    </div>
+    <div class="status-right">
+      <span id="statusTabInfo"></span>
+      <span class="status-sep"></span>
+      <span>SQLite {{ sqlite_version }}</span>
+      <span class="status-sep"></span>
+      <span>v{{ version }}</span>
+    </div>
+  </footer>
+</div>
+
+<div class="drop-overlay" id="dropOverlay" hidden>
+  <div class="drop-card">
+    <div class="drop-icon"><svg class="icon"><use href="#i-upload"/></svg></div>
+    <h3>Drop to open</h3>
+    <p>SQLite databases open directly. Excel & CSV files go to the importer.</p>
+  </div>
+</div>
+
+<dialog class="modal" id="appModal"></dialog>
+<dialog class="modal confirm-modal" id="confirmModal"></dialog>
+<div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+<aside class="drawer" id="historyDrawer" aria-label="Query history" hidden></aside>
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<script type="module" src="{{ url_for('static', filename='js/app.js') }}?v={{ version }}"></script>
+</body>
+</html>
