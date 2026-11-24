@@ -1,89 +1,109 @@
+"""Build ExcelSQL Studio 2.0 as a desktop executable.
+
+From the repository root:
+
+    python -m pip install -r ai_version/requirements-desktop.txt
+    python setup.py build_exe
+
+Options:
+
+    python setup.py build_exe --onefile       # single executable (slower start)
+    python setup.py build_exe --console       # keep terminal visible for debugging
+    python setup.py build_exe --icon path.ico # custom icon
+"""
+
+from __future__ import annotations
+
+import argparse
+import subprocess
 import sys
-from cx_Freeze import setup, Executable
-import os
-import msilib
+from pathlib import Path
 
 
-# Set up paths for TCL and TK libraries
-PYTHON_INSTALL_DIR = os.path.dirname(os.path.dirname(os.__file__))
-os.environ['TCL_LIBRARY'] = os.path.join(PYTHON_INSTALL_DIR, 'tcl', 'tcl8.6')
-os.environ['TK_LIBRARY'] = os.path.join(PYTHON_INSTALL_DIR, 'tcl', 'tk8.6')
-
-# Base for Windows GUI
-base = None
-if sys.platform == 'win32':
-    base = 'Win32GUI'
+ROOT = Path(__file__).resolve().parent
+APP_DIR = ROOT / "ai_version"
 
 
-# Increase recursion limit
-sys.setrecursionlimit(3000)
+def _data_separator() -> str:
+    return ";" if sys.platform == "win32" else ":"
 
 
-# Executable definition
-executables = [
-    Executable(
-        'ExcelSQL_Studio.py',
-        icon="logo.ico",
-        base=base,
+def _default_icon() -> Path | None:
+    assets = APP_DIR / "assets"
+    if sys.platform == "win32":
+        candidate = assets / "app.ico"
+    elif sys.platform == "darwin":
+        candidate = assets / "app.icns"
+    else:
+        return None
+    return candidate if candidate.is_file() else None
+
+
+def build_exe(args: argparse.Namespace) -> None:
+    command = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean"]
+    command.append("--onefile" if args.onefile else "--onedir")
+    if not args.console:
+        command.append("--windowed")
+    command.extend(["--name", "ExcelSQL Studio"])
+
+    separator = _data_separator()
+    command.extend(
+        [
+            "--add-data",
+            f"templates{separator}templates",
+            "--add-data",
+            f"static{separator}static",
+        ]
     )
-]
 
-# MSI Shortcut table
-shortcut_table = [
-    (
-        "DesktopShortcut",  # Shortcut
-        "DesktopFolder",  # Directory_
-        "ExcelSQL Studio",  # Name
-        "TARGETDIR",  # Component_
-        "[TARGETDIR]ExcelSQL_Studio.exe",  # Target
-        None,  # Arguments
-        None,  # Description
-        None,  # Hotkey
-        None,  # Icon
-        None,  # IconIndex
-        None,  # ShowCmd
-        "TARGETDIR",  # WkDir
+    icon = Path(args.icon) if args.icon else _default_icon()
+    if icon is not None:
+        if not icon.is_absolute():
+            icon = (ROOT / icon).resolve()
+        if not icon.is_file():
+            raise SystemExit(f"Icon file not found: {icon}")
+        command.extend(["--icon", str(icon)])
 
-        
+    command.append("desktop.py")
+
+    try:
+        subprocess.run(command, cwd=APP_DIR, check=True)
+    except FileNotFoundError as exc:
+        raise SystemExit(
+            "PyInstaller was not found. Install it with:\n"
+            "  python -m pip install -r ai_version/requirements-desktop.txt"
+        ) from exc
+    except subprocess.CalledProcessError as exc:
+        raise SystemExit(exc.returncode) from exc
+
+    if args.onefile:
+        output = APP_DIR / "dist" / "ExcelSQL Studio.exe"
+    elif sys.platform == "win32":
+        output = APP_DIR / "dist" / "ExcelSQL Studio" / "ExcelSQL Studio.exe"
+    else:
+        output = APP_DIR / "dist" / "ExcelSQL Studio" / "ExcelSQL Studio"
+    print(f"\nDesktop build ready: {output}")
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "command",
+        nargs="?",
+        default="build_exe",
+        choices=["build_exe"],
+        help="build command (default: build_exe)",
     )
-]
+    parser.add_argument("--onefile", action="store_true", help="build a single executable")
+    parser.add_argument("--console", action="store_true", help="keep the terminal visible")
+    parser.add_argument("--icon", help="path to a .ico/.icns icon file")
+    args = parser.parse_args(argv)
 
-# MSI Options
-msi_data = {"Shortcut": shortcut_table}
-bdist_msi_options = {
-    "data": msi_data}
+    if not APP_DIR.is_dir():
+        raise SystemExit(f"Application folder not found: {APP_DIR}")
 
-# Build Options
-options = {
-    "bdist_msi": bdist_msi_options,
-    "build_exe": {
-        "include_files": [
-            os.path.join(PYTHON_INSTALL_DIR, "DLLs", "tk86t.dll"),
-            os.path.join(PYTHON_INSTALL_DIR, "DLLs", "tcl86t.dll"),
-            "logo.ico",  # Application icon
-            "ficon.png",
-        ],
-        "packages": [
-            "tkinter",
-            "pandas",
-            "pandastable",
-            "sqlalchemy",
-            "tkinterdnd2",
-            "base64",
-            "webbrowser",
-            "queue",
-            "xlsxwriter",
-        ],
-    },
-}
+    build_exe(args)
 
-# Setup definition
-setup(
-    name="ExcelSQL_Studio",
-    version="1.0",
-    description="Run SQL Queries on Excel Files",
-    author="MD: Abdullah Al Mamun",
-    author_email="pygemsbd@gmail.com",
-    options=options,
-    executables=executables,
-)
+
+if __name__ == "__main__":
+    main()

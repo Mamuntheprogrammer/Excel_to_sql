@@ -87,14 +87,38 @@ The build scripts create and use `.venv/` automatically. On Debian/Ubuntu, insta
 
 ### Build an executable
 
+From the **repository root**, install the desktop dependencies and run `setup.py`:
+
+```bash
+python3 -m pip install -r ai_version/requirements-desktop.txt
+python3 setup.py build_exe
+```
+
+On Windows:
+
+```bat
+python -m pip install -r ai_version\requirements-desktop.txt
+python setup.py build_exe
+```
+
+The build scripts in this folder do the same thing with a local `.venv/`:
+
 ```bash
 ./build_desktop.sh        # Unix/macOS
 build_desktop.bat         # Windows
 ```
 
-The output is in `dist/ExcelSQL Studio/`. To debug startup problems, remove `--windowed` from the build script so terminal output remains visible.
+Output is in `ai_version/dist/ExcelSQL Studio/`.
 
-Optional: place `assets/app.ico` (Windows) or `assets/app.icns` (macOS) in the project and the build script will use it automatically.
+Useful build options:
+
+```bash
+python setup.py build_exe --onefile       # single executable, slower start
+python setup.py build_exe --console       # keep terminal visible for debugging
+python setup.py build_exe --icon path.ico # custom icon
+```
+
+Optional: place `assets/app.ico` (Windows) or `assets/app.icns` (macOS) in `ai_version/` and it will be used automatically.
 
 ### Desktop-specific notes
 

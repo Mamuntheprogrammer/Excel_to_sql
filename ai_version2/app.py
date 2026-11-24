@@ -612,6 +612,20 @@ def api_import_run():
     created_database = False
     if db is None:
         imports_path = DB_DIR / "imported-data.sqlite"
+        if not imports_path.exists():
+            try:
+                conn = sqlite3.connect(str(imports_path))
+                try:
+                    conn.execute("VACUUM")
+                finally:
+                    conn.close()
+            except sqlite3.Error as exc:
+                imports_path.unlink(missing_ok=True)
+                raise ApiError(
+                    f"Could not create the import database: {exc}",
+                    500,
+                    "CREATE_FAILED",
+                ) from exc
         db = Database(imports_path, read_only=False)
         set_db(db)
         add_recent(db.path)

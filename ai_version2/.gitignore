@@ -1,0 +1,10 @@
+.workspace/
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Desktop tooling and PyInstaller builds
+.venv/
+build/
+dist/
+*.spec
